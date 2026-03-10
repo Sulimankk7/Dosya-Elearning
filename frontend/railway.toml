@@ -1,6 +1,5 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "npm install && npm run build"
 
 [deploy]
-startCommand = "sh -c 'ls dist/index.html && ./node_modules/.bin/serve dist -l $PORT --single'"
+startCommand = "npx serve dist -l $PORT --single"

@@ -14,9 +14,13 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+    origin: [
+    "https://dosya-elearning.netlify.app",
+    "http://localhost:5173"
+  ],
     credentials: true,
 }));
+
 // ✅ Add limit to handle base64 image uploads
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
