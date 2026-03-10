@@ -14,7 +14,7 @@ const forgotPasswordLimiter = rateLimit({
   message: {
     success: false,
     message: 'Too many password reset requests. Please try again in 15 minutes.',
-  },
+  } as any,
 }) as unknown as RequestHandler;
 
 const resetPasswordLimiter = rateLimit({
@@ -25,7 +25,7 @@ const resetPasswordLimiter = rateLimit({
   message: {
     success: false,
     message: 'Too many attempts. Please try again in 15 minutes.',
-  },
+  } as any,
 }) as unknown as RequestHandler;
 
 // ── Auth routes ──────────────────────────────────────────────────────────────
