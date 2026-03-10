@@ -5,8 +5,9 @@ import type {
     AdminCourse, AdminDashboardResponse,
     UserProfile,
 } from '../types/api';
+import { API_URL } from '../config/api';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE = API_URL;
 
 // ---- Generic fetch helper ----
 async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
