@@ -39,7 +39,13 @@ app.use(session({
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     },
 }));
+app.get("/", (req, res) => {
+  res.send("DOSYA backend is running");
+});
 
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok" });
+});
 // Routes
 app.use('/api', routes);
 
