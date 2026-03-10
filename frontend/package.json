@@ -7,7 +7,11 @@
     "build": "vite build",
     "dev": "vite"
   },
+  
+ 
+
   "dependencies": {
+    "serve": "^14.2.0",
     "@emotion/react": "11.14.0",
     "@emotion/styled": "11.14.1",
     "@mui/icons-material": "7.3.5",
