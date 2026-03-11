@@ -115,6 +115,15 @@ export const lessonsApi = {
 };
 
 // ============================================================
+// Video API
+// ============================================================
+export const videoApi = {
+    async getSasUrl(lessonId: string): Promise<{ url: string }> {
+        return apiFetch<{ url: string }>(`/video/${lessonId}`);
+    },
+};
+
+// ============================================================
 // Enrollments API
 // ============================================================
 export const enrollmentsApi = {

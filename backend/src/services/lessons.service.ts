@@ -2,29 +2,13 @@ import { lessonsRepository } from '../repositories/lessons.repository';
 import { lessonProgressRepository } from '../repositories/lesson-progress.repository';
 import { enrollmentsRepository } from '../repositories/enrollments.repository';
 import { NotFoundError, ForbiddenError } from '../utils/errors';
-import { generateVideoSas } from '../utils/azure-sas';
 
 function formatLessonDuration(minutes: number | null): string {
     if (!minutes) return '';
     return `${minutes} دقيقة`;
 }
 
-/**
- * Signs a video URL or filename with a SAS token.
- * Handles both formats stored in the DB:
- *   - Full URL: "https://dosyavideostorage.blob.core.windows.net/videos/file.mp4"
- *   - Filename only: "comments-in-cpp.mp4"
- * Returns null safely if no video_url is set.
- */
-function signVideoUrl(videoUrl: string | null): string | null {
-    if (!videoUrl) return null;
-    try {
-        return generateVideoSas(videoUrl);
-    } catch (err) {
-        console.error('[SAS] Failed to sign video URL:', videoUrl, err);
-        return null; // degrade gracefully — don't crash the lesson response
-    }
-}
+// Removed automatic SAS signing from lesson fetch; will be handled via dedicated endpoint
 
 export const lessonsService = {
     async getLessonDetail(lessonId: string, userId?: string) {
@@ -46,23 +30,23 @@ export const lessonsService = {
 
         if (locked) {
             return {
-                id:          lesson.id,
-                title:       lesson.title,
-                duration:    formatLessonDuration(lesson.duration_minutes),
-                locked:      true,
-                completed:   false,
-                video_url:   null,   // never expose URL for locked lessons
+                id: lesson.id,
+                title: lesson.title,
+                duration: formatLessonDuration(lesson.duration_minutes),
+                locked: true,
+                completed: false,
+                video_url: null,   // never expose URL for locked lessons
                 description: null,
             };
         }
 
         return {
-            id:          lesson.id,
-            title:       lesson.title,
-            duration:    formatLessonDuration(lesson.duration_minutes),
-            video_url:   signVideoUrl(lesson.video_url),  // ✅ SAS signed
+            id: lesson.id,
+            title: lesson.title,
+            duration: formatLessonDuration(lesson.duration_minutes),
+            video_url: lesson.video_url,  // Will be requested via /api/video/:id instead of full SAS here
             description: lesson.description ?? null,
-            locked:      false,
+            locked: false,
             completed,
         };
     },
@@ -83,13 +67,13 @@ export const lessonsService = {
         }
 
         const progress = await lessonProgressRepository.upsert(userId, lessonId, {
-            is_completed:    data.completed,
+            is_completed: data.completed,
             watched_seconds: data.watched_seconds,
         });
 
         return {
-            lesson_id:    progress.lesson_id,
-            completed:    progress.is_completed,
+            lesson_id: progress.lesson_id,
+            completed: progress.is_completed,
             watched_time: progress.watched_seconds,
         };
     },

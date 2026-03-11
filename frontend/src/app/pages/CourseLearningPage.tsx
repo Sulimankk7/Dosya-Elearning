@@ -78,7 +78,7 @@ export default function CourseLearningPage() {
 
   const isLastLesson = data
     ? currentSectionIdx === data.sections.length - 1 &&
-      currentLessonIdx === data.sections[currentSectionIdx]?.lessons.length - 1
+    currentLessonIdx === data.sections[currentSectionIdx]?.lessons.length - 1
     : false;
 
   // ── Mark complete ─────────────────────────────────────────────
@@ -192,9 +192,9 @@ export default function CourseLearningPage() {
               </div>
             ) : (
               <VideoPlayer
+                lessonId={lessonDetail?.id}
                 thumbnail={course.image}
                 locked={currentLessonData?.locked}
-                videoUrl={lessonDetail?.video_url ?? undefined}
               />
             )}
 
@@ -255,9 +255,8 @@ export default function CourseLearningPage() {
 
         {/* Course Sidebar */}
         <div
-          className={`w-80 bg-card border-r border-border overflow-y-auto transition-all ${
-            sidebarOpen ? "block" : "hidden lg:block"
-          }`}
+          className={`w-80 bg-card border-r border-border overflow-y-auto transition-all ${sidebarOpen ? "block" : "hidden lg:block"
+            }`}
         >
           <div className="p-6">
             <h3 className="text-xl mb-4">محتوى الكورس</h3>
@@ -298,11 +297,10 @@ export default function CourseLearningPage() {
                         <button
                           key={lessonIndex}
                           onClick={() => selectLesson(sectionIndex, lessonIndex)}
-                          className={`w-full text-right p-3 rounded-xl transition-all flex items-center gap-3 ${
-                            currentSectionIdx === sectionIndex && currentLessonIdx === lessonIndex
+                          className={`w-full text-right p-3 rounded-xl transition-all flex items-center gap-3 ${currentSectionIdx === sectionIndex && currentLessonIdx === lessonIndex
                               ? "bg-primary/10 border-2 border-primary/30"
                               : "hover:bg-secondary"
-                          }`}
+                            }`}
                         >
                           {lesson.locked ? (
                             <Lock className="w-4 h-4 text-muted-foreground flex-shrink-0" />

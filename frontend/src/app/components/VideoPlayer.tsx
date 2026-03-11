@@ -1,15 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Lock, Play, AlertCircle } from "lucide-react";
 import { DosyaCard } from "./DosyaCard";
+import { videoApi } from "../../services/api";
+import * as Plyr from "plyr";
+import "plyr/dist/plyr.css";
+
+// We have to extract the default export inside the commonjs/esm environment for plyr sometimes
+const PlyrConstructor = (Plyr as any).default || Plyr;
 
 interface VideoPlayerProps {
+  lessonId?: string;
   locked?: boolean;
   thumbnail?: string;
-  videoUrl?: string;
 }
 
-export function VideoPlayer({ locked = false, thumbnail, videoUrl }: VideoPlayerProps) {
+export function VideoPlayer({ lessonId, locked = false, thumbnail }: VideoPlayerProps) {
   const [error, setError] = useState(false);
+  const [sasUrl, setSasUrl] = useState<string | null>(null);
+  const [loadingUrl, setLoadingUrl] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const playerRef = useRef<any>(null);
 
   // ── Locked state ─────────────────────────────────────────────
   if (locked) {
@@ -24,21 +34,89 @@ export function VideoPlayer({ locked = false, thumbnail, videoUrl }: VideoPlayer
     );
   }
 
+  // ── Fetch SAS URL ───────────────────────────────────────────
+  useEffect(() => {
+    if (locked || !lessonId) {
+      setSasUrl(null);
+      return;
+    }
+
+    let isMounted = true;
+    setLoadingUrl(true);
+    setError(false);
+
+    videoApi.getSasUrl(lessonId)
+      .then(res => {
+        if (isMounted) setSasUrl(res.url);
+      })
+      .catch(err => {
+        console.error("Failed to load video:", err);
+        if (isMounted) setError(true);
+      })
+      .finally(() => {
+        if (isMounted) setLoadingUrl(false);
+      });
+
+    return () => { isMounted = false; };
+  }, [lessonId, locked]);
+
+  // ── Initialize Plyr ───────────────────────────────────────────
+  useEffect(() => {
+    if (!sasUrl || !videoRef.current) return;
+
+    // Destroy existing player if present
+    if (playerRef.current) {
+      playerRef.current.destroy();
+    }
+
+    playerRef.current = new PlyrConstructor(videoRef.current, {
+      controls: [
+        "play",
+        "progress",
+        "current-time",
+        "mute",
+        "volume",
+        "fullscreen"
+      ],
+      settings: [], // Hide settings menu completely
+    });
+
+    return () => {
+      if (playerRef.current) {
+        playerRef.current.destroy();
+        playerRef.current = null;
+      }
+    };
+  }, [sasUrl]);
+
   // ── Real video (Azure MP4 URL) ────────────────────────────────
-  if (videoUrl && !error) {
+  if (sasUrl && !error && !loadingUrl) {
     return (
-      <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black">
+      <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black relative">
         <video
-          key={videoUrl}           // re-mount player when lesson changes
-          src={videoUrl}
-          controls
-          autoPlay={false}
+          ref={videoRef}
+          src={sasUrl}
           className="w-full h-full"
           poster={thumbnail || undefined}
           onError={() => setError(true)}
-        >
-          متصفحك لا يدعم تشغيل الفيديو.
-        </video>
+          controlsList="nodownload"
+          disablePictureInPicture
+          onContextMenu={(e) => e.preventDefault()}
+          playsInline
+        />
+        {/* CSS workaround to ensure download button is hidden even in sketchy browsers */}
+        <style dangerouslySetInnerHTML={{
+          __html: `
+          video::-internal-media-controls-download-button {
+            display:none;
+          }
+          video::-webkit-media-controls-enclosure {
+            overflow:hidden;
+          }
+          video::-webkit-media-controls-panel {
+            width: calc(100% + 30px);
+          }
+        `}} />
       </div>
     );
   }
