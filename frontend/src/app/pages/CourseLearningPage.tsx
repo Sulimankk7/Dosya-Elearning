@@ -15,6 +15,7 @@ export default function CourseLearningPage() {
   const [currentLessonIdx, setCurrentLessonIdx] = useState(0);
   const [expandedSection, setExpandedSection] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showCompletionBanner, setShowCompletionBanner] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // Lesson detail (video_url + description come from GET /lessons/:id)
@@ -27,6 +28,9 @@ export default function CourseLearningPage() {
     coursesApi.getContent(id)
       .then((res) => {
         setData(res);
+        if (res.overall_progress === 100) {
+          setShowCompletionBanner(true);
+        }
         // Auto-load the first lesson
         const firstLesson = res.sections[0]?.lessons[0];
         if (firstLesson) fetchLessonDetail(firstLesson.id);
@@ -88,6 +92,9 @@ export default function CourseLearningPage() {
       await lessonsApi.updateProgress(currentLessonData.id, { completed: true });
       const updated = await coursesApi.getContent(id!);
       setData(updated);
+      if (updated.overall_progress === 100) {
+        setShowCompletionBanner(true);
+      }
     } catch (err) {
       console.error(err);
     }
@@ -108,7 +115,7 @@ export default function CourseLearningPage() {
   const courseCompleted = overall_progress === 100;
 
   // ── Course completed screen ───────────────────────────────────
-  if (courseCompleted) {
+  if (courseCompleted && showCompletionBanner) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6">
         <DosyaCard className="max-w-2xl text-center">
@@ -136,6 +143,9 @@ export default function CourseLearningPage() {
           </div>
 
           <div className="flex gap-4 justify-center">
+            <DosyaButton onClick={() => setShowCompletionBanner(false)}>
+              العودة إلى الدروس
+            </DosyaButton>
             <Link to="/dashboard">
               <DosyaButton variant="outline">لوحة التحكم</DosyaButton>
             </Link>
@@ -169,21 +179,31 @@ export default function CourseLearningPage() {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="hidden md:block text-left">
+            <div className="hidden sm:block text-left">
               <p className="text-sm text-muted-foreground">التقدم الإجمالي</p>
               <p className="text-sm">{completed_lessons} من {total_lessons} درس</p>
             </div>
-            <div className="w-32 h-2 bg-secondary rounded-full overflow-hidden">
+            <div className="w-24 sm:w-32 h-2 bg-secondary rounded-full overflow-hidden">
               <div className="h-full bg-primary rounded-full" style={{ width: `${overall_progress}%` }} />
             </div>
           </div>
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* Main Content */}
+      {/* Main Container */}
+      <div className="flex flex-1 overflow-hidden relative">
+
+        {/* Mobile Overlay for Sidebar */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
+        {/* Main Content (Video Player) */}
         <div className="flex-1 overflow-y-auto">
-          <div className="max-w-5xl mx-auto p-6">
+          <div className="max-w-5xl mx-auto p-4 md:p-6 pb-20 lg:pb-6">
 
             {/* Video Player — passes real video_url from lesson detail */}
             {lessonLoading ? (
@@ -253,12 +273,12 @@ export default function CourseLearningPage() {
           </div>
         </div>
 
-        {/* Course Sidebar */}
+        {/* Course Sidebar (Drawer on mobile, static on desktop) */}
         <div
-          className={`w-80 bg-card border-r border-border overflow-y-auto transition-all ${sidebarOpen ? "block" : "hidden lg:block"
+          className={`absolute lg:static inset-y-0 right-0 z-50 w-80 bg-card border-l border-border overflow-y-auto transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"
             }`}
         >
-          <div className="p-6">
+          <div className="p-4 md:p-6">
             <h3 className="text-xl mb-4">محتوى الكورس</h3>
 
             <div className="space-y-3">
@@ -298,8 +318,8 @@ export default function CourseLearningPage() {
                           key={lessonIndex}
                           onClick={() => selectLesson(sectionIndex, lessonIndex)}
                           className={`w-full text-right p-3 rounded-xl transition-all flex items-center gap-3 ${currentSectionIdx === sectionIndex && currentLessonIdx === lessonIndex
-                              ? "bg-primary/10 border-2 border-primary/30"
-                              : "hover:bg-secondary"
+                            ? "bg-primary/10 border-2 border-primary/30"
+                            : "hover:bg-secondary"
                             }`}
                         >
                           {lesson.locked ? (

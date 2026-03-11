@@ -74,11 +74,17 @@ export function VideoPlayer({ lessonId, locked = false, thumbnail }: VideoPlayer
         "play",
         "progress",
         "current-time",
+        "duration",
         "mute",
         "volume",
+        "settings",
         "fullscreen"
       ],
-      settings: [], // Hide settings menu completely
+      settings: ["speed"],
+      speed: {
+        selected: 1,
+        options: [0.5, 0.75, 1, 1.25, 1.5, 2]
+      }
     });
 
     return () => {
@@ -92,7 +98,7 @@ export function VideoPlayer({ lessonId, locked = false, thumbnail }: VideoPlayer
   // ── Real video (Azure MP4 URL) ────────────────────────────────
   if (sasUrl && !error && !loadingUrl) {
     return (
-      <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black relative">
+      <div className="video-container aspect-video w-full rounded-2xl overflow-hidden bg-black relative">
         <video
           ref={videoRef}
           src={sasUrl}

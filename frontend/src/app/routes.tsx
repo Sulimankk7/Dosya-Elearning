@@ -14,6 +14,8 @@ import AdminCourses from "./pages/AdminCourses";
 import DesignSystem from "./pages/DesignSystem";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import LessonPage from "./pages/LessonPage";
+import NotFoundPage from "./pages/NotFoundPage";
 
 export const router = createBrowserRouter([
     {
@@ -71,5 +73,13 @@ export const router = createBrowserRouter([
     {
         path: "/reset-password",
         Component: ResetPasswordPage,
+    },
+    {
+        path: "/lesson/:id",
+        element: <ProtectedRoute><LessonPage /></ProtectedRoute>,
+    },
+    {
+        path: "*",
+        Component: NotFoundPage,
     },
 ]);

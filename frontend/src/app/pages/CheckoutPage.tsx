@@ -58,14 +58,14 @@ export default function CheckoutPage() {
     return (
       <div className="min-h-screen flex items-center justify-center p-6">
         <DosyaCard className="max-w-md text-center">
-          <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-6">
-            <CheckCircle className="w-12 h-12 text-primary" />
+          <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-6">
+            <CheckCircle className="w-8 h-8 md:w-12 md:h-12 text-primary" />
           </div>
-          <h2 className="text-3xl mb-4">تم التفعيل بنجاح! 🎉</h2>
-          <p className="text-muted-foreground mb-6">
+          <h2 className="text-2xl md:text-3xl mb-4">تم التفعيل بنجاح! 🎉</h2>
+          <p className="text-sm md:text-base text-muted-foreground mb-6">
             تم تفعيل الكورس بنجاح. يمكنك البدء في التعلم الآن!
           </p>
-          <div className="flex gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to={`/learn/${id}`}>
               <DosyaButton>ابدأ التعلم الآن</DosyaButton>
             </Link>
@@ -105,12 +105,12 @@ export default function CheckoutPage() {
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <Link to={`/courses/${id}`} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-4">
+          <Link to={`/courses/${id}`} className="flex items-center gap-2 text-sm md:text-base text-muted-foreground hover:text-foreground transition-colors mb-4">
             <ArrowLeft className="w-5 h-5" />
             العودة لتفاصيل الكورس
           </Link>
-          <h1 className="text-4xl mb-2">تفعيل الكورس</h1>
-          <p className="text-muted-foreground text-lg">أدخل كود التفعيل للوصول إلى الكورس</p>
+          <h1 className="text-3xl md:text-4xl mb-2">تفعيل الكورس</h1>
+          <p className="text-base md:text-lg text-muted-foreground">أدخل كود التفعيل للوصول إلى الكورس</p>
         </div>
 
         {/* Course Summary */}

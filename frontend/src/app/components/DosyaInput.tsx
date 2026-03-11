@@ -18,7 +18,7 @@ export const DosyaInput = forwardRef<HTMLInputElement, DosyaInputProps>(
         <input
           ref={ref}
           className={cn(
-            "w-full px-4 py-3 bg-input-background border border-input rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all",
+            "w-full px-4 py-3 bg-input-background border border-input rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all min-h-[44px]",
             error && "border-destructive focus:ring-destructive",
             className
           )}

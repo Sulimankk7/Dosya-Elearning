@@ -1,16 +1,22 @@
 import { useState, useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { Sidebar } from "../components/Sidebar";
 import { DosyaCard } from "../components/DosyaCard";
 import { DosyaButton } from "../components/DosyaButton";
 import { BookOpen, Clock, Users, Star, CheckCircle, Lock, Play } from "lucide-react";
+import { toast } from "sonner";
 import { coursesApi } from "../../services/api";
 import type { CourseDetailResponse } from "../../types/api";
 
 export default function CourseDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [data, setData] = useState<CourseDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const openLesson = (lessonId: string) => {
+    navigate(`/lesson/${lessonId}`);
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -117,25 +123,34 @@ export default function CourseDetails() {
                 <h3 className="text-2xl mb-4">محتوى الكورس</h3>
                 <div className="space-y-4">
                   {sections.map((section, sectionIndex) => (
-                    <DosyaCard key={sectionIndex}>
-                      <h4 className="mb-4">{section.title}</h4>
-                      <div className="space-y-2">
+                    <DosyaCard key={sectionIndex} className="section-card mb-4 border-0">
+                      <h4 className="mb-4 text-xl font-bold">{section.title}</h4>
+                      <div className="space-y-3">
                         {section.lessons.map((lesson, lessonIndex) => (
                           <div
                             key={lessonIndex}
-                            className="flex items-center justify-between p-3 rounded-xl hover:bg-secondary/50 transition-all"
+                            className={`lesson-row lesson-item ${lesson.locked ? "lesson-locked" : "lesson-open"}`}
+                            onClick={() => {
+                              if (lesson.locked) {
+                                toast("هذه الحصة متاحة بعد شراء الكورس");
+                              } else {
+                                openLesson(lesson.id);
+                              }
+                            }}
                           >
-                            <div className="flex items-center gap-3">
+                            <div className="icon-container">
                               {lesson.locked ? (
-                                <Lock className="w-4 h-4 text-muted-foreground" />
+                                <Lock className="w-5 h-5 text-muted-foreground lock-icon" />
                               ) : (
-                                <Play className="w-4 h-4 text-primary" />
+                                <Play className="w-5 h-5 text-primary play-icon" />
                               )}
-                              <span className={lesson.locked ? "text-muted-foreground" : ""}>
-                                {lesson.title}
-                              </span>
                             </div>
-                            <span className="text-sm text-muted-foreground">{lesson.duration}</span>
+                            <div className={`title-text ${!lesson.locked ? "text-white" : ""}`}>
+                              {lesson.title}
+                            </div>
+                            <div className="duration-text">
+                              {lesson.duration}
+                            </div>
                           </div>
                         ))}
                       </div>

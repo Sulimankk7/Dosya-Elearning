@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import {
   BookOpen, Users, Award, Star, ArrowLeft,
   Zap, GraduationCap, ChevronRight,
-  BarChart3,
+  BarChart3, Menu, X
 } from "lucide-react";
 import { DosyaButton } from "../components/DosyaButton";
 import { DosyaCard } from "../components/DosyaCard";
@@ -67,11 +67,10 @@ function CourseCard({ course }: { course: CatalogCourse }) {
           className="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-500"
         />
         <span
-          className={`absolute top-3 left-3 text-xs font-bold px-3 py-1 rounded-full shadow ${
-            isFree
+          className={`absolute top-3 left-3 text-xs font-bold px-3 py-1 rounded-full shadow ${isFree
               ? "bg-emerald-500 text-white"
               : "bg-primary text-primary-foreground"
-          }`}
+            }`}
         >
           {course.price}
         </span>
@@ -203,16 +202,18 @@ const TESTIMONIALS = [
 // ─────────────────────────────────────────────────────────────
 
 function Header() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-      <div className="container mx-auto px-6 py-4">
+      <div className="container mx-auto px-4 md:px-6 py-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-4 md:gap-8">
             <h1 className="text-2xl text-primary font-bold">DOSYA</h1>
             <nav className="hidden md:flex gap-6">
               {[
                 { href: "#features", label: "المميزات" },
-                { href: "#courses",  label: "الكورسات" },
+                { href: "#courses", label: "الكورسات" },
                 { href: "#testimonials", label: "آراء الطلاب" },
               ].map((l) => (
                 <a
@@ -225,7 +226,8 @@ function Header() {
               ))}
             </nav>
           </div>
-          <div className="flex items-center gap-3">
+
+          <div className="hidden md:flex items-center gap-3">
             <Link to="/login">
               <DosyaButton variant="ghost" size="sm">
                 تسجيل الدخول
@@ -235,8 +237,48 @@ function Header() {
               <DosyaButton size="sm">إنشاء حساب</DosyaButton>
             </Link>
           </div>
+
+          {/* Mobile Menu Toggle */}
+          <button
+            className="md:hidden p-2 text-foreground"
+            onClick={() => setMenuOpen(!menuOpen)}
+          >
+            {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
         </div>
       </div>
+
+      {/* Mobile Menu Dropdown */}
+      {menuOpen && (
+        <div className="md:hidden border-t border-border bg-card/95 backdrop-blur-md absolute w-full px-4 py-4 flex flex-col gap-4 shadow-xl">
+          <nav className="flex flex-col gap-2">
+            {[
+              { href: "#features", label: "المميزات" },
+              { href: "#courses", label: "الكورسات" },
+              { href: "#testimonials", label: "آراء الطلاب" },
+            ].map((l) => (
+              <a
+                key={l.href}
+                href={l.href}
+                onClick={() => setMenuOpen(false)}
+                className="text-foreground hover:text-primary transition-colors text-base py-2 border-b border-border/50"
+              >
+                {l.label}
+              </a>
+            ))}
+          </nav>
+          <div className="flex flex-col gap-3 mt-2">
+            <Link to="/login" onClick={() => setMenuOpen(false)}>
+              <DosyaButton variant="outline" className="w-full justify-center min-h-[44px]">
+                تسجيل الدخول
+              </DosyaButton>
+            </Link>
+            <Link to="/register" onClick={() => setMenuOpen(false)}>
+              <DosyaButton className="w-full justify-center min-h-[44px]">إنشاء حساب</DosyaButton>
+            </Link>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
@@ -248,41 +290,41 @@ function HeroSection() {
       <div className="pointer-events-none absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full bg-primary/10 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-20 -left-20 w-[350px] h-[350px] rounded-full bg-accent/10 blur-3xl" />
 
-      <div className="container mx-auto px-6 py-24 md:py-32 grid grid-cols-1 md:grid-cols-2 gap-14 items-center">
+      <div className="container mx-auto px-4 md:px-6 py-12 md:py-24 grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-14 items-center">
         {/* Text — RTL right side */}
-        <div className="space-y-7 text-right" dir="rtl">
+        <div className="space-y-6 md:space-y-7 text-right" dir="rtl">
           {/* Badge */}
-          <span className="inline-flex items-center gap-2 bg-primary/10 text-primary text-sm font-semibold px-4 py-1.5 rounded-full border border-primary/20">
+          <span className="inline-flex items-center gap-2 bg-primary/10 text-primary text-xs md:text-sm font-semibold px-4 py-1.5 rounded-full border border-primary/20">
             <Star className="w-3.5 h-3.5 fill-primary" />
-           DOSYA
+            DOSYA
           </span>
 
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight">
             تعلم البرمجة{" "}
             <span className="text-primary">والمواد الجامعية</span>{" "}
             بطريقة أسهل
           </h1>
 
-        
 
-          <div className="flex flex-wrap gap-4 justify-end">
-            <Link to="/courses">
-              <DosyaButton size="lg" className="flex items-center gap-2">
+
+          <div className="flex flex-col sm:flex-row flex-wrap gap-4 md:justify-end">
+            <Link to="/courses" className="w-full sm:w-auto">
+              <DosyaButton size="lg" className="w-full sm:w-auto flex items-center justify-center gap-2 min-h-[48px]">
                 تصفح الكورسات
                 <ArrowLeft className="w-5 h-5" />
               </DosyaButton>
             </Link>
-            <Link to="/register">
-              <DosyaButton variant="outline" size="lg">
-                ابدأ الآن 
+            <Link to="/register" className="w-full sm:w-auto">
+              <DosyaButton variant="outline" size="lg" className="w-full sm:w-auto min-h-[48px]">
+                ابدأ الآن
               </DosyaButton>
             </Link>
           </div>
         </div>
 
         {/* Platform preview card */}
-        <div className="flex justify-center order-first md:order-last">
-          <div className="relative w-full max-w-sm">
+        <div className="flex justify-center order-first lg:order-last">
+          <div className="relative w-full max-w-[280px] sm:max-w-sm">
             <div className="absolute inset-0 bg-primary/20 rounded-3xl blur-2xl scale-95" />
             <DosyaCard className="relative space-y-5">
               {/* Window dots */}
@@ -376,8 +418,8 @@ function CoursesSection() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
         {loading
           ? Array.from({ length: 6 }).map((_, i) => (
-              <CourseCardSkeleton key={i} />
-            ))
+            <CourseCardSkeleton key={i} />
+          ))
           : courses.map((c) => <CourseCard key={c.id} course={c} />)}
       </div>
 
@@ -402,7 +444,7 @@ function WhySection() {
     <section id="features" className="bg-card/30">
       <div className="container mx-auto px-6 py-20">
         <SectionHeading
-          title="ليش  DOSYA؟"
+          title="ليش  DOSYA ؟"
           subtitle="نفهم تحديات الطالب الجامعي ونقدم الحل الأمثل"
         />
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -483,13 +525,13 @@ function CTASection() {
     <section className="container mx-auto px-6 py-20">
       <DosyaCard className="text-center bg-gradient-to-br from-primary/20 to-accent/20 border-2 border-primary/30 py-16">
         <h2 className="text-3xl md:text-4xl font-extrabold mb-4">
-منصتنا للدوسيات الورقية         </h2>
+          منصتنا للدوسيات الورقية         </h2>
         <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">
-         فوت و تصفح محتوى الدوسات 
+          فوت و تصفح محتوى الدوسات
         </p>
         <Link to="https://dosyanew-production.up.railway.app/">
           <DosyaButton size="lg" className="gap-2">
-           احصل على دوسية
+            احصل على دوسية
             <ArrowLeft className="w-5 h-5" />
           </DosyaButton>
         </Link>

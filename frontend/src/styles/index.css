@@ -25,3 +25,104 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #475569;
 }
+
+/* --- Course Lessons Sidebar Improvements --- */
+
+.section-card {
+  border-radius: 16px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.lesson-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  /* Ensure no overlap on small screens */
+}
+
+.lesson-item {
+  padding: 12px;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.lesson-open {
+  opacity: 1;
+  cursor: pointer;
+}
+
+.lesson-open:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateX(-3px);
+  /* Move slightly */
+}
+
+.lesson-open:hover .play-icon {
+  transform: scale(1.1);
+  transition: transform 0.2s ease;
+}
+
+.lesson-open .title-text {
+  color: #ffffff;
+  /* white title */
+  transition: filter 0.2s ease;
+}
+
+.lesson-open:hover .title-text {
+  filter: brightness(1.2);
+  /* change text brightness on hover */
+}
+
+.lesson-locked {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+}
+
+.title-text {
+  flex: 1;
+  text-align: center;
+  /* CENTER: lesson title */
+  padding: 0 12px;
+}
+
+.duration-text {
+  font-size: 0.875rem;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+/* --- Plyr Custom Styling --- */
+:root {
+  --plyr-color-main: #22c55e;
+}
+
+.plyr {
+  border-radius: 16px;
+  overflow: hidden;
+  background: #020617;
+}
+
+.plyr__control--overlaid {
+  background: #22c55e;
+}
+
+.plyr--full-ui input[type=range] {
+  color: #22c55e;
+}
+
+.video-container {
+  width: 100%;
+  max-width: 1100px;
+  margin: auto;
+  aspect-ratio: 16 / 9;
+}

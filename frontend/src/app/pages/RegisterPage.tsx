@@ -42,14 +42,14 @@ export default function RegisterPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link to="/">
-            <h1 className="text-4xl text-primary mb-2">DOSYA</h1>
+            <h1 className="text-3xl md:text-4xl text-primary mb-2">DOSYA</h1>
           </Link>
-          <p className="text-muted-foreground">منصة التعلم الإلكتروني</p>
+          <p className="text-sm md:text-base text-muted-foreground">منصة التعلم الإلكتروني</p>
         </div>
 
         <DosyaCard>
-          <h2 className="text-2xl mb-2 text-center">إنشاء حساب جديد</h2>
-          <p className="text-muted-foreground text-center mb-6">
+          <h2 className="text-xl md:text-2xl mb-2 text-center">إنشاء حساب جديد</h2>
+          <p className="text-sm md:text-base text-muted-foreground text-center mb-6">
             ابدأ رحلتك التعليمية اليوم
           </p>
 
