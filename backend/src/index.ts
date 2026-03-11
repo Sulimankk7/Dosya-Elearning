@@ -12,12 +12,15 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Trust Railway's reverse proxy (required for secure cookies behind a proxy)
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(cors({
     origin: [
-    "https://dosya-elearning.netlify.app",
-    "http://localhost:5173"
-  ],
+        "https://dosya-elearning.netlify.app",
+        "http://localhost:5173"
+    ],
     credentials: true,
 }));
 
@@ -39,16 +42,16 @@ app.use(session({
     cookie: {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     },
 }));
 app.get("/", (req, res) => {
-  res.send("DOSYA backend is running");
+    res.send("DOSYA backend is running");
 });
 
 app.get("/api/health", (req, res) => {
-  res.json({ status: "ok" });
+    res.json({ status: "ok" });
 });
 // Routes
 app.use('/api', routes);
