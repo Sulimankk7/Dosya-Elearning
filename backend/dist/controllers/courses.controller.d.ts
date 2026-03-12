@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 export declare const coursesController: {
-    list(req: Request, res: Response, next: NextFunction): Promise<void>;
+    listCourses(req: Request, res: Response, next: NextFunction): Promise<void>;
     getDetail(req: Request, res: Response, next: NextFunction): Promise<void>;
     getContent(req: Request, res: Response, next: NextFunction): Promise<void>;
 };

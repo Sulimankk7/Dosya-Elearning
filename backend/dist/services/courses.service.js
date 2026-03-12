@@ -57,20 +57,22 @@ exports.coursesService = {
                 progress = totalLessons > 0 ? Math.round((completed / totalLessons) * 100) : 0;
             }
         }
+        // Fetch all lessons for the entire course in one query, instead of looping over sections
+        const allLessons = await lessons_repository_1.lessonsRepository.findByCourseId(courseId);
         // Build sections with lessons
-        const sectionsWithLessons = await Promise.all(sections.map(async (section) => {
-            const lessons = await lessons_repository_1.lessonsRepository.findBySectionId(section.id);
+        const sectionsWithLessons = sections.map((section) => {
+            const sectionLessons = allLessons.filter(l => l.section_id === section.id);
             return {
                 id: section.id,
                 title: section.title,
-                lessons: lessons.map((l) => ({
+                lessons: sectionLessons.map((l) => ({
                     id: l.id,
                     title: l.title,
                     duration: formatLessonDuration(l.duration_minutes),
                     locked: enrolled ? false : !l.is_preview,
                 })),
             };
-        }));
+        });
         return {
             course: {
                 id: course.id,
@@ -102,29 +104,38 @@ exports.coursesService = {
         const sections = await sections_repository_1.sectionsRepository.findByCourseId(courseId);
         const totalLessons = await lessons_repository_1.lessonsRepository.countByCourseId(courseId);
         const completedTotal = await lesson_progress_repository_1.lessonProgressRepository.countCompletedByUserAndCourse(userId, courseId);
-        const sectionsWithLessons = await Promise.all(sections.map(async (section) => {
-            const lessons = await lessons_repository_1.lessonsRepository.findBySectionId(section.id);
-            const sectionLessonCount = lessons.length;
-            const sectionCompleted = await lesson_progress_repository_1.lessonProgressRepository.countCompletedByUserAndSection(userId, section.id);
-            const lessonsWithProgress = await Promise.all(lessons.map(async (l) => {
-                const prog = await lesson_progress_repository_1.lessonProgressRepository.findByUserAndLesson(userId, l.id);
+        // Optimization: Fetch all lessons and progress in bulk
+        const allLessons = await lessons_repository_1.lessonsRepository.findByCourseId(courseId);
+        const allProgress = await lesson_progress_repository_1.lessonProgressRepository.findByUserAndCourse(userId, courseId);
+        // Create a fast lookup map for progress
+        const progressMap = new Map(allProgress.map(p => [p.lesson_id, p]));
+        const sectionsWithLessons = sections.map((section) => {
+            const sectionLessons = allLessons.filter(l => l.section_id === section.id);
+            const sectionLessonCount = sectionLessons.length;
+            let sectionCompletedCount = 0;
+            const lessonsWithProgress = sectionLessons.map((l) => {
+                const prog = progressMap.get(l.id);
+                const isCompleted = prog?.is_completed || false;
+                if (isCompleted) {
+                    sectionCompletedCount++;
+                }
                 return {
                     id: l.id,
                     title: l.title,
                     duration: formatLessonDuration(l.duration_minutes),
-                    completed: prog?.is_completed || false,
-                    locked: false,
+                    completed: isCompleted,
+                    locked: false, // implicitly unlocked since user is enrolled
                 };
-            }));
+            });
             return {
                 id: section.id,
                 title: section.title,
                 progress: sectionLessonCount > 0
-                    ? Math.round((sectionCompleted / sectionLessonCount) * 100)
+                    ? Math.round((sectionCompletedCount / sectionLessonCount) * 100)
                     : 0,
                 lessons: lessonsWithProgress,
             };
-        }));
+        });
         return {
             course: {
                 id: course.id,

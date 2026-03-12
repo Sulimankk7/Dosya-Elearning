@@ -5,7 +5,8 @@
  * so they always pick up values populated by dotenv at startup.
  *
  * @param videoUrl  Either a full Azure Blob URL or a plain filename
+ * @param durationMinutes Length of the video in minutes (used for calculating SAS expiration)
  * @returns         A fully-qualified SAS URL ready for the browser/player
  */
-export declare function generateVideoSas(videoUrl: string): string;
+export declare function generateVideoSas(videoUrl: string, durationMinutes?: number): string;
 //# sourceMappingURL=azure-sas.d.ts.map

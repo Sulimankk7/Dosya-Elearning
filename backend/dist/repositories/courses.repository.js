@@ -8,7 +8,14 @@ const database_1 = __importDefault(require("../config/database"));
 exports.coursesRepository = {
     async findAll(publishedOnly) {
         let query = `
-      SELECT c.*,
+      SELECT
+        c.id,
+        c.title,
+        c.description,
+        c.price,
+        c.thumbnail_url,
+        c.instructor_name,
+        c.duration_hours,
         (SELECT COUNT(*) FROM enrollments e WHERE e.course_id = c.id) as student_count
       FROM courses c
     `;

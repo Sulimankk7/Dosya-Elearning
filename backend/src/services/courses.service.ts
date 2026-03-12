@@ -57,22 +57,23 @@ export const coursesService = {
             }
         }
 
+        // Fetch all lessons for the entire course in one query, instead of looping over sections
+        const allLessons = await lessonsRepository.findByCourseId(courseId);
+
         // Build sections with lessons
-        const sectionsWithLessons = await Promise.all(
-            sections.map(async (section) => {
-                const lessons = await lessonsRepository.findBySectionId(section.id);
-                return {
-                    id: section.id,
-                    title: section.title,
-                    lessons: lessons.map((l) => ({
-                        id: l.id,
-                        title: l.title,
-                        duration: formatLessonDuration(l.duration_minutes),
-                        locked: enrolled ? false : !l.is_preview,
-                    })),
-                };
-            })
-        );
+        const sectionsWithLessons = sections.map((section) => {
+            const sectionLessons = allLessons.filter(l => l.section_id === section.id);
+            return {
+                id: section.id,
+                title: section.title,
+                lessons: sectionLessons.map((l) => ({
+                    id: l.id,
+                    title: l.title,
+                    duration: formatLessonDuration(l.duration_minutes),
+                    locked: enrolled ? false : !l.is_preview,
+                })),
+            };
+        });
 
         return {
             course: {
@@ -107,35 +108,44 @@ export const coursesService = {
         const totalLessons = await lessonsRepository.countByCourseId(courseId);
         const completedTotal = await lessonProgressRepository.countCompletedByUserAndCourse(userId, courseId);
 
-        const sectionsWithLessons = await Promise.all(
-            sections.map(async (section) => {
-                const lessons = await lessonsRepository.findBySectionId(section.id);
-                const sectionLessonCount = lessons.length;
-                const sectionCompleted = await lessonProgressRepository.countCompletedByUserAndSection(userId, section.id);
+        // Optimization: Fetch all lessons and progress in bulk
+        const allLessons = await lessonsRepository.findByCourseId(courseId);
+        const allProgress = await lessonProgressRepository.findByUserAndCourse(userId, courseId);
+        
+        // Create a fast lookup map for progress
+        const progressMap = new Map(allProgress.map(p => [p.lesson_id, p]));
 
-                const lessonsWithProgress = await Promise.all(
-                    lessons.map(async (l) => {
-                        const prog = await lessonProgressRepository.findByUserAndLesson(userId, l.id);
-                        return {
-                            id:        l.id,
-                            title:     l.title,
-                            duration:  formatLessonDuration(l.duration_minutes),
-                            completed: prog?.is_completed || false,
-                            locked:    false,
-                        };
-                    })
-                );
+        const sectionsWithLessons = sections.map((section) => {
+            const sectionLessons = allLessons.filter(l => l.section_id === section.id);
+            const sectionLessonCount = sectionLessons.length;
+            
+            let sectionCompletedCount = 0;
+
+            const lessonsWithProgress = sectionLessons.map((l) => {
+                const prog = progressMap.get(l.id);
+                const isCompleted = prog?.is_completed || false;
+                if (isCompleted) {
+                    sectionCompletedCount++;
+                }
 
                 return {
-                    id:       section.id,
-                    title:    section.title,
-                    progress: sectionLessonCount > 0
-                        ? Math.round((sectionCompleted / sectionLessonCount) * 100)
-                        : 0,
-                    lessons: lessonsWithProgress,
+                    id:        l.id,
+                    title:     l.title,
+                    duration:  formatLessonDuration(l.duration_minutes),
+                    completed: isCompleted,
+                    locked:    false, // implicitly unlocked since user is enrolled
                 };
-            })
-        );
+            });
+
+            return {
+                id:       section.id,
+                title:    section.title,
+                progress: sectionLessonCount > 0
+                    ? Math.round((sectionCompletedCount / sectionLessonCount) * 100)
+                    : 0,
+                lessons: lessonsWithProgress,
+            };
+        });
 
         return {
             course: {

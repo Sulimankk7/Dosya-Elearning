@@ -9,6 +9,29 @@ import { API_URL } from '../config/api';
 
 const API_BASE = API_URL;
 
+// ---- Simple In-Memory Cache ----
+type CacheEntry<T> = { data: T; timestamp: number };
+const cache = new Map<string, CacheEntry<any>>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+function clearCache() {
+    cache.clear();
+}
+
+function getFromCache<T>(key: string): T | null {
+    const entry = cache.get(key);
+    if (!entry) return null;
+    if (Date.now() - entry.timestamp > CACHE_TTL) {
+        cache.delete(key);
+        return null;
+    }
+    return entry.data as T;
+}
+
+function setInCache<T>(key: string, data: T) {
+    cache.set(key, { data, timestamp: Date.now() });
+}
+
 // ---- Generic fetch helper ----
 async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
     const headers: Record<string, string> = {
@@ -78,6 +101,7 @@ export const authApi = {
 
     async logout(): Promise<void> {
         await apiFetch('/auth/logout', { method: 'POST' });
+        clearCache();
     },
 };
 
@@ -86,11 +110,21 @@ export const authApi = {
 // ============================================================
 export const coursesApi = {
     async list(): Promise<CatalogCourse[]> {
-        return apiFetch<CatalogCourse[]>('/courses');
+        const cacheKey = 'courses_list';
+        const cached = getFromCache<CatalogCourse[]>(cacheKey);
+        if (cached) return cached;
+        const data = await apiFetch<CatalogCourse[]>('/courses');
+        setInCache(cacheKey, data);
+        return data;
     },
 
     async getDetail(id: string): Promise<CourseDetailResponse> {
-        return apiFetch<CourseDetailResponse>(`/courses/${id}`);
+        const cacheKey = `course_detail_${id}`;
+        const cached = getFromCache<CourseDetailResponse>(cacheKey);
+        if (cached) return cached;
+        const data = await apiFetch<CourseDetailResponse>(`/courses/${id}`);
+        setInCache(cacheKey, data);
+        return data;
     },
 
     async getContent(id: string): Promise<CourseContentResponse> {

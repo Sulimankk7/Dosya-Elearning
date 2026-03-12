@@ -12,18 +12,18 @@ export declare const enrollmentsService: {
             certificates: number;
             completed_lessons: number;
         };
-        courses: ({
-            id: string;
-            title: string;
-            description: string;
+        courses: {
+            id: any;
+            title: any;
+            description: any;
             price: string;
-            image: string;
-            instructor: string;
+            image: any;
+            instructor: any;
             duration: string;
             students: number;
             enrolled: boolean;
             progress: number;
-        } | null)[];
+        }[];
     }>;
 };
 //# sourceMappingURL=enrollments.service.d.ts.map

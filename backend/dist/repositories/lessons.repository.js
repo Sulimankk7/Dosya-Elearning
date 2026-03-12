@@ -62,5 +62,31 @@ exports.lessonsRepository = {
        WHERE l.id = $1`, [lessonId]);
         return result.rows[0]?.course_id || null;
     },
+    async getLessonDetailWithContext(lessonId, userId) {
+        let query = `
+            SELECT 
+                l.id, l.title, l.duration_minutes, l.video_url, l.description, l.is_preview,
+                cs.course_id
+            FROM lessons l
+            JOIN course_sections cs ON cs.id = l.section_id
+            WHERE l.id = $1
+        `;
+        let params = [lessonId];
+        if (userId) {
+            query = `
+                SELECT 
+                    l.id, l.title, l.duration_minutes, l.video_url, l.description, l.is_preview,
+                    cs.course_id,
+                    (SELECT COUNT(*) > 0 FROM enrollments e WHERE e.user_id = $2 AND e.course_id = cs.course_id) as is_enrolled,
+                    (SELECT lp.is_completed FROM lesson_progress lp WHERE lp.user_id = $2 AND lp.lesson_id = l.id LIMIT 1) as is_completed
+                FROM lessons l
+                JOIN course_sections cs ON cs.id = l.section_id
+                WHERE l.id = $1
+            `;
+            params.push(userId);
+        }
+        const result = await database_1.default.query(query, params);
+        return result.rows[0] || null;
+    }
 };
 //# sourceMappingURL=lessons.repository.js.map

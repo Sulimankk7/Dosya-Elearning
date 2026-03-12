@@ -1,1 +1,1 @@
-{"version":3,"file":"azure-sas.d.ts","sourceRoot":"","sources":["../../src/utils/azure-sas.ts"],"names":[],"mappings":"AAqBA;;;;;;;;GAQG;AACH,wBAAgB,gBAAgB,CAAC,QAAQ,EAAE,MAAM,GAAG,MAAM,CA4BzD"}
+{"version":3,"file":"azure-sas.d.ts","sourceRoot":"","sources":["../../src/utils/azure-sas.ts"],"names":[],"mappings":"AAqBA;;;;;;;;;GASG;AACH,wBAAgB,gBAAgB,CAAC,QAAQ,EAAE,MAAM,EAAE,eAAe,GAAE,MAAW,GAAG,MAAM,CAgCvF"}

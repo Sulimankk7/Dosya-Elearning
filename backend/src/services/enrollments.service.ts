@@ -26,34 +26,28 @@ export const enrollmentsService = {
 
     /** GET /api/enrollments/my-courses — matching StudentDashboard shape */
     async getMyCourses(userId: string) {
-        const enrollments = await enrollmentsRepository.findByUserId(userId);
+        const rawCourses = await enrollmentsRepository.getMyCoursesWithStats(userId);
         const totalCompletedLessons = await lessonProgressRepository.countCompletedByUser(userId);
 
-        const courses = await Promise.all(
-            enrollments.map(async (enrollment) => {
-                const course = await coursesRepository.findById(enrollment.course_id);
-                if (!course) return null;
+        const validCourses = rawCourses.map((row: any) => {
+            const totalLessons = parseInt(row.total_lessons || '0', 10);
+            const completedLessons = parseInt(row.completed_lessons || '0', 10);
+            const progress = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
 
-                const totalLessons = await lessonsRepository.countByCourseId(course.id);
-                const completedLessons = await lessonProgressRepository.countCompletedByUserAndCourse(userId, course.id);
-                const progress = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+            return {
+                id: row.id,
+                title: row.title,
+                description: row.description || '',
+                price: formatPrice(parseFloat(row.price || '0')),
+                image: row.thumbnail_url || '',
+                instructor: row.instructor_name || '',
+                duration: formatDuration(parseFloat(row.duration_hours || '0')),
+                students: parseInt(row.student_count || '0', 10),
+                enrolled: true,
+                progress,
+            };
+        });
 
-                return {
-                    id: course.id,
-                    title: course.title,
-                    description: course.description || '',
-                    price: formatPrice(course.price),
-                    image: course.thumbnail_url || '',
-                    instructor: course.instructor_name || '',
-                    duration: formatDuration(course.duration_hours),
-                    students: parseInt(String(course.student_count || course.students_count || 0), 10),
-                    enrolled: true,
-                    progress,
-                };
-            })
-        );
-
-        const validCourses = courses.filter(Boolean);
         const totalCourses = validCourses.length;
         const completedCourses = validCourses.filter((c: any) => c.progress === 100).length;
         const avgProgress = totalCourses > 0

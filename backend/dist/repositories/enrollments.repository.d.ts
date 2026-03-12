@@ -11,5 +11,6 @@ export declare const enrollmentsRepository: {
     create(userId: string, courseId: string): Promise<EnrollmentRow>;
     countByCourseId(courseId: string): Promise<number>;
     countByUserId(userId: string): Promise<number>;
+    getMyCoursesWithStats(userId: string): Promise<any[]>;
 };
 //# sourceMappingURL=enrollments.repository.d.ts.map

@@ -2,9 +2,10 @@ import { Request, Response, NextFunction } from 'express';
 import { coursesService } from '../services/courses.service';
 
 export const coursesController = {
-    async list(req: Request, res: Response, next: NextFunction) {
+    async listCourses(req: Request, res: Response, next: NextFunction) {
         try {
             const courses = await coursesService.listCourses();
+            res.setHeader('Cache-Control', 'public, max-age=300');
             res.json(courses);
         } catch (error) { next(error); }
     },

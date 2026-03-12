@@ -3,9 +3,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.coursesController = void 0;
 const courses_service_1 = require("../services/courses.service");
 exports.coursesController = {
-    async list(req, res, next) {
+    async listCourses(req, res, next) {
         try {
             const courses = await courses_service_1.coursesService.listCourses();
+            res.setHeader('Cache-Control', 'public, max-age=300');
             res.json(courses);
         }
         catch (error) {

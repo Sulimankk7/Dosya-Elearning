@@ -23,9 +23,10 @@ function extractFilename(input) {
  * so they always pick up values populated by dotenv at startup.
  *
  * @param videoUrl  Either a full Azure Blob URL or a plain filename
+ * @param durationMinutes Length of the video in minutes (used for calculating SAS expiration)
  * @returns         A fully-qualified SAS URL ready for the browser/player
  */
-function generateVideoSas(videoUrl) {
+function generateVideoSas(videoUrl, durationMinutes = 60) {
     const ACCOUNT = process.env.AZURE_STORAGE_ACCOUNT;
     const KEY = process.env.AZURE_STORAGE_KEY;
     const CONTAINER = process.env.AZURE_STORAGE_CONTAINER;
@@ -38,8 +39,11 @@ function generateVideoSas(videoUrl) {
         throw new Error("Missing env var: AZURE_STORAGE_CONTAINER");
     const filename = extractFilename(videoUrl);
     const credential = new storage_blob_1.StorageSharedKeyCredential(ACCOUNT, KEY);
-    const startsOn = new Date(Date.now() - 5 * 60 * 1000);
-    const expiresOn = new Date(Date.now() + 60 * 60 * 1000);
+    const startsOn = new Date(Date.now() - 5 * 60 * 1000); // 5 min buffer
+    // Dynamic expiration: Duration * 1.5, converted from minutes to milliseconds
+    // We use max(5, duration * 1.5) to ensure at least 5 minutes of valid SAS for short clips
+    const expiryMinutes = Math.max(5, durationMinutes * 1.5);
+    const expiresOn = new Date(Date.now() + expiryMinutes * 60 * 1000);
     const sas = (0, storage_blob_1.generateBlobSASQueryParameters)({
         containerName: CONTAINER,
         blobName: filename,

@@ -1,0 +1,1 @@
+import{j as e}from"./index-n7usi7aU.js";import{b as m}from"./vendor-D-g7kjL9.js";import{c as t}from"./utils-CWs4mQ9_.js";const p=m.forwardRef(({className:r,glass:a=!1,children:o,...s},d)=>e.jsx("div",{ref:d,className:t("bg-card rounded-2xl p-6 shadow-lg",a&&"backdrop-blur-sm bg-card/50 border border-border",r),...s,children:o}));p.displayName="DosyaCard";export{p as D};

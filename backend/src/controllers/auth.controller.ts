@@ -40,6 +40,7 @@ export const authController = {
                 roleName: result.user.role,
                 full_name: result.user.full_name,
                 email: result.user.email,
+                avatar_url: result.user.avatar_url,
             };
 
             res.status(201).json(result);
@@ -62,6 +63,7 @@ export const authController = {
                 roleName: result.user.role,
                 full_name: result.user.full_name,
                 email: result.user.email,
+                avatar_url: result.user.avatar_url,
             };
 
             res.json(result);
@@ -75,6 +77,19 @@ export const authController = {
             if (!req.session.userId) {
                 return res.status(401).json({ message: 'Unauthorized' });
             }
+
+            if (req.session.user) {
+                // Return safe fields from session
+                return res.json({
+                    id: req.session.user.id,
+                    full_name: req.session.user.full_name,
+                    email: req.session.user.email,
+                    role: req.session.user.role,
+                    avatar_url: req.session.user.avatar_url || '',
+                });
+            }
+
+            // Fallback for older sessions without req.session.user
             const result = await authService.getCurrentUser(req.session.userId);
             res.json(result);
         } catch (error) {

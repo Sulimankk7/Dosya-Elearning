@@ -9,6 +9,7 @@ declare module 'express-session' {
             roleName: string;
             full_name: string;
             email: string;
+            avatar_url?: string | null;
         };
     }
 }

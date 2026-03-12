@@ -30,5 +30,6 @@ export declare const lessonsRepository: {
     countByCourseId(courseId: string): Promise<number>;
     getNextOrderIndex(sectionId: string): Promise<number>;
     getCourseIdByLessonId(lessonId: string): Promise<string | null>;
+    getLessonDetailWithContext(lessonId: string, userId?: string): Promise<any | null>;
 };
 //# sourceMappingURL=lessons.repository.d.ts.map

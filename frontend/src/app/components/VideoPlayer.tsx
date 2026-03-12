@@ -99,9 +99,16 @@ export function VideoPlayer({ lessonId, locked = false, thumbnail }: VideoPlayer
   if (sasUrl && !error && !loadingUrl) {
     return (
       <div className="video-container aspect-video w-full rounded-2xl overflow-hidden bg-black relative">
+        {/*
+          NOTE FOR iOS COMPATIBILITY:
+          Ensure the uploaded MP4s are encoded strictly with:
+          - Video codec: H.264
+          - Audio codec: AAC
+          - Container: MP4
+          Other permutations (like H.265 or alternative audio) may fail natively on iOS.
+        */}
         <video
           ref={videoRef}
-          src={sasUrl}
           className="w-full h-full"
           poster={thumbnail || undefined}
           onError={() => setError(true)}
@@ -109,7 +116,11 @@ export function VideoPlayer({ lessonId, locked = false, thumbnail }: VideoPlayer
           disablePictureInPicture
           onContextMenu={(e) => e.preventDefault()}
           playsInline
-        />
+          controls
+          preload="metadata"
+        >
+          <source src={sasUrl} type="video/mp4" />
+        </video>
         {/* CSS workaround to ensure download button is hidden even in sketchy browsers */}
         <style dangerouslySetInnerHTML={{
           __html: `

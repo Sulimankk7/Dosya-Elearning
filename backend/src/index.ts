@@ -1,5 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
+import compression from 'compression';
 import session from 'express-session';
 import connectPgSimple from 'connect-pg-simple';
 import dotenv from 'dotenv';
@@ -22,7 +23,11 @@ app.use(cors({
         "http://localhost:5173"
     ],
     credentials: true,
+    maxAge: 86400, // Cache preflight requests for 24 hours
 }));
+
+// Enable GZIP compression
+app.use(compression() as any);
 
 // ✅ Add limit to handle base64 image uploads
 app.use(express.json({ limit: '10mb' }));

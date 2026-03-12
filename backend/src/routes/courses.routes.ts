@@ -4,7 +4,7 @@ import { authMiddleware, optionalAuthMiddleware } from '../middlewares/auth.midd
 
 const router = Router();
 
-router.get('/', coursesController.list);
+router.get('/', coursesController.listCourses);
 router.get('/:id', optionalAuthMiddleware, coursesController.getDetail);
 router.get('/:id/content', authMiddleware, coursesController.getContent);
 

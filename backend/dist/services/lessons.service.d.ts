@@ -1,10 +1,10 @@
 export declare const lessonsService: {
     getLessonDetail(lessonId: string, userId?: string): Promise<{
-        id: string;
-        title: string;
+        id: any;
+        title: any;
         duration: string;
-        video_url: string | null;
-        description: string | null;
+        video_url: any;
+        description: any;
         locked: boolean;
         completed: boolean;
     }>;

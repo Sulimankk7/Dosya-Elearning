@@ -12,20 +12,15 @@ function formatLessonDuration(minutes: number | null): string {
 
 export const lessonsService = {
     async getLessonDetail(lessonId: string, userId?: string) {
-        const lesson = await lessonsRepository.findById(lessonId);
+        const lesson = await lessonsRepository.getLessonDetailWithContext(lessonId, userId);
         if (!lesson) throw new NotFoundError('Lesson not found');
 
-        const courseId = await lessonsRepository.getCourseIdByLessonId(lessonId);
         let locked = !lesson.is_preview;
         let completed = false;
 
-        if (userId && courseId) {
-            const enrollment = await enrollmentsRepository.findByUserAndCourse(userId, courseId);
-            if (enrollment) {
-                locked = false;
-                const progress = await lessonProgressRepository.findByUserAndLesson(userId, lessonId);
-                completed = progress?.is_completed || false;
-            }
+        if (userId && lesson.is_enrolled) {
+            locked = false;
+            completed = !!lesson.is_completed;
         }
 
         if (locked) {

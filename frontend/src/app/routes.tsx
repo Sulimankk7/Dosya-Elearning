@@ -1,85 +1,93 @@
 import { createBrowserRouter } from "react-router-dom";
-import LandingPage from "./pages/LandingPage";
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
-import ForgotPasswordPage from "./pages/ForgotPasswordPage";
-import StudentDashboard from "./pages/StudentDashboard";
-import CourseCatalog from "./pages/CourseCatalog";
-import CourseDetails from "./pages/CourseDetails";
-import CheckoutPage from "./pages/CheckoutPage";
-import CourseLearningPage from "./pages/CourseLearningPage";
-import ProfilePage from "./pages/ProfilePage";
-import AdminDashboard from "./pages/AdminDashboard";
-import AdminCourses from "./pages/AdminCourses";
-import DesignSystem from "./pages/DesignSystem";
-import ResetPasswordPage from "./pages/ResetPasswordPage";
+import React, { Suspense } from "react";
 import { ProtectedRoute } from "./components/ProtectedRoute";
-import LessonPage from "./pages/LessonPage";
-import NotFoundPage from "./pages/NotFoundPage";
+
+const LandingPage = React.lazy(() => import("./pages/LandingPage"));
+const LoginPage = React.lazy(() => import("./pages/LoginPage"));
+const RegisterPage = React.lazy(() => import("./pages/RegisterPage"));
+const ForgotPasswordPage = React.lazy(() => import("./pages/ForgotPasswordPage"));
+const StudentDashboard = React.lazy(() => import("./pages/StudentDashboard"));
+const CourseCatalog = React.lazy(() => import("./pages/CourseCatalog"));
+const CourseDetails = React.lazy(() => import("./pages/CourseDetails"));
+const CheckoutPage = React.lazy(() => import("./pages/CheckoutPage"));
+const CourseLearningPage = React.lazy(() => import("./pages/CourseLearningPage"));
+const ProfilePage = React.lazy(() => import("./pages/ProfilePage"));
+const AdminDashboard = React.lazy(() => import("./pages/AdminDashboard"));
+const AdminCourses = React.lazy(() => import("./pages/AdminCourses"));
+const DesignSystem = React.lazy(() => import("./pages/DesignSystem"));
+const ResetPasswordPage = React.lazy(() => import("./pages/ResetPasswordPage"));
+const LessonPage = React.lazy(() => import("./pages/LessonPage"));
+const NotFoundPage = React.lazy(() => import("./pages/NotFoundPage"));
+
+const SuspenseWrapper = ({ children }: { children: React.ReactNode }) => (
+    <Suspense fallback={<div className="flex h-screen items-center justify-center">جاري التحميل...</div>}>
+        {children}
+    </Suspense>
+);
 
 export const router = createBrowserRouter([
     {
         path: "/",
-        Component: LandingPage,
+        element: <SuspenseWrapper><LandingPage /></SuspenseWrapper>,
     },
     {
         path: "/login",
-        Component: LoginPage,
+        element: <SuspenseWrapper><LoginPage /></SuspenseWrapper>,
     },
     {
         path: "/register",
-        Component: RegisterPage,
+        element: <SuspenseWrapper><RegisterPage /></SuspenseWrapper>,
     },
     {
         path: "/forgot-password",
-        Component: ForgotPasswordPage,
+        element: <SuspenseWrapper><ForgotPasswordPage /></SuspenseWrapper>,
     },
     {
         path: "/dashboard",
-        element: <ProtectedRoute><StudentDashboard /></ProtectedRoute>,
+        element: <ProtectedRoute><SuspenseWrapper><StudentDashboard /></SuspenseWrapper></ProtectedRoute>,
     },
     {
         path: "/courses",
-        Component: CourseCatalog,
+        element: <SuspenseWrapper><CourseCatalog /></SuspenseWrapper>,
     },
     {
         path: "/courses/:id",
-        Component: CourseDetails,
+        element: <SuspenseWrapper><CourseDetails /></SuspenseWrapper>,
     },
     {
         path: "/checkout/:id",
-        element: <ProtectedRoute><CheckoutPage /></ProtectedRoute>,
+        element: <ProtectedRoute><SuspenseWrapper><CheckoutPage /></SuspenseWrapper></ProtectedRoute>,
     },
     {
         path: "/learn/:id",
-        element: <ProtectedRoute><CourseLearningPage /></ProtectedRoute>,
+        element: <ProtectedRoute><SuspenseWrapper><CourseLearningPage /></SuspenseWrapper></ProtectedRoute>,
     },
     {
         path: "/profile",
-        element: <ProtectedRoute><ProfilePage /></ProtectedRoute>,
+        element: <ProtectedRoute><SuspenseWrapper><ProfilePage /></SuspenseWrapper></ProtectedRoute>,
     },
     {
         path: "/admin",
-        element: <ProtectedRoute><AdminDashboard /></ProtectedRoute>,
+        element: <ProtectedRoute><SuspenseWrapper><AdminDashboard /></SuspenseWrapper></ProtectedRoute>,
     },
     {
         path: "/admin/courses",
-        element: <ProtectedRoute><AdminCourses /></ProtectedRoute>,
+        element: <ProtectedRoute><SuspenseWrapper><AdminCourses /></SuspenseWrapper></ProtectedRoute>,
     },
     {
         path: "/design-system",
-        Component: DesignSystem,
+        element: <SuspenseWrapper><DesignSystem /></SuspenseWrapper>,
     },
     {
         path: "/reset-password",
-        Component: ResetPasswordPage,
+        element: <SuspenseWrapper><ResetPasswordPage /></SuspenseWrapper>,
     },
     {
         path: "/lesson/:id",
-        element: <ProtectedRoute><LessonPage /></ProtectedRoute>,
+        element: <ProtectedRoute><SuspenseWrapper><LessonPage /></SuspenseWrapper></ProtectedRoute>,
     },
     {
         path: "*",
-        Component: NotFoundPage,
+        element: <SuspenseWrapper><NotFoundPage /></SuspenseWrapper>,
     },
 ]);
