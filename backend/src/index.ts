@@ -16,6 +16,23 @@ const PORT = process.env.PORT || 5000;
 // Trust Railway's reverse proxy (required for secure cookies behind a proxy)
 app.set('trust proxy', 1);
 
+// --- GLOBAL TIMING LOGGER ---
+app.use((req, res, next) => {
+    const start = process.hrtime();
+    const startTimeMs = Date.now();
+    
+    // Log when the request is strictly received
+    console.log(`\n[${new Date().toISOString()}] ➡️ REQ START | ${req.method} ${req.originalUrl}`);
+
+    res.on('finish', () => {
+        const diff = process.hrtime(start);
+        const time = (diff[0] * 1e3 + diff[1] * 1e-6).toFixed(2);
+        console.log(`[${new Date().toISOString()}] ⬅️ REQ END   | ${req.method} ${req.originalUrl} | Status: ${res.statusCode} | Time: ${time}ms`);
+    });
+
+    next();
+});
+
 // Middleware
 app.use(cors({
     origin: [

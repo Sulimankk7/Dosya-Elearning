@@ -69,25 +69,31 @@ export function VideoPlayer({ lessonId, locked = false, thumbnail }: VideoPlayer
       playerRef.current.destroy();
     }
 
-    playerRef.current = new PlyrConstructor(videoRef.current, {
-      controls: [
-        "play",
-        "progress",
-        "current-time",
-        "duration",
-        "mute",
-        "volume",
-        "settings",
-        "fullscreen"
-      ],
-      settings: ["speed"],
-      speed: {
-        selected: 1,
-        options: [0.5, 0.75, 1, 1.25, 1.5, 2]
-      }
-    });
+    // Delay Plyr initialization slightly to ensure the browser strictly binds the <source> tag natively first.
+    // iOS Safari notoriously drops the src if the wrapper initialized too quickly before the DOM mutation resolves.
+    const timer = setTimeout(() => {
+      if (!videoRef.current) return;
+      playerRef.current = new PlyrConstructor(videoRef.current, {
+        controls: [
+          "play",
+          "progress",
+          "current-time",
+          "duration",
+          "mute",
+          "volume",
+          "settings",
+          "fullscreen"
+        ],
+        settings: ["speed"],
+        speed: {
+          selected: 1,
+          options: [0.5, 0.75, 1, 1.25, 1.5, 2]
+        }
+      });
+    }, 50);
 
     return () => {
+      clearTimeout(timer);
       if (playerRef.current) {
         playerRef.current.destroy();
         playerRef.current = null;
@@ -110,12 +116,14 @@ export function VideoPlayer({ lessonId, locked = false, thumbnail }: VideoPlayer
         <video
           ref={videoRef}
           className="w-full h-full"
+          style={{ width: "100%" }}
           poster={thumbnail || undefined}
           onError={() => setError(true)}
           controlsList="nodownload"
           disablePictureInPicture
           onContextMenu={(e) => e.preventDefault()}
           playsInline
+          webkit-playsinline="true"
           controls
           preload="metadata"
         >
