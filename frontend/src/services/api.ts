@@ -9,6 +9,11 @@ import { API_URL } from '../config/api';
 
 const API_BASE = API_URL;
 
+// ---- Global Auth Events ----
+export const AUTH_EVENTS = {
+    UNAUTHORIZED: 'auth:unauthorized'
+};
+
 // ---- Simple In-Memory Cache ----
 type CacheEntry<T> = { data: T; timestamp: number };
 const cache = new Map<string, CacheEntry<any>>();
@@ -56,6 +61,10 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
                     res.status === 404 ? "المورد غير موجود" :
                         res.status === 500 ? "حدث خطأ في الخادم" :
                             "حدث خطأ غير متوقع");
+
+        if (res.status === 401) {
+            window.dispatchEvent(new CustomEvent(AUTH_EVENTS.UNAUTHORIZED));
+        }
 
         throw new Error(message);
     }

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { DosyaButton } from "../components/DosyaButton";
 import { DosyaCard } from "../components/DosyaCard";
 import { DosyaInput } from "../components/DosyaInput";
@@ -8,13 +8,27 @@ import { useAuth } from "../../context/AuthContext";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
-  const { register } = useAuth();
+  const [searchParams] = useSearchParams();
+  const { register, user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && isAuthenticated && user) {
+      if (user.role === "admin" || user.role === "super_admin") {
+        navigate("/admin", { replace: true });
+      } else {
+        navigate("/dashboard", { replace: true });
+      }
+    }
+  }, [authLoading, isAuthenticated, user, navigate]);
+
+  const redirectParams = searchParams.get('redirect');
+  const isSafeRedirect = (url: string | null) => url && url.startsWith('/');
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,7 +42,11 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       await register(name, email, password);
-      navigate("/dashboard");
+      if (isSafeRedirect(redirectParams)) {
+        navigate(redirectParams as string, { replace: true });
+      } else {
+        navigate("/dashboard", { replace: true });
+      }
     } catch (err: any) {
       setError(err.message || "فشل إنشاء الحساب");
     } finally {
@@ -112,7 +130,7 @@ export default function RegisterPage() {
 
           <p className="text-center text-sm text-muted-foreground mt-6">
             لديك حساب بالفعل؟{" "}
-            <Link to="/login" className="text-primary hover:underline">
+            <Link to={`/login${redirectParams ? `?redirect=${encodeURIComponent(redirectParams)}` : ''}`} className="text-primary hover:underline">
               سجل الدخول
             </Link>
           </p>

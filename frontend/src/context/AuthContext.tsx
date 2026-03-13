@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { authApi } from '../services/api';
+import { authApi, AUTH_EVENTS } from '../services/api';
 import type { AuthUser } from '../types/api';
 
 interface AuthContextType {
@@ -23,6 +23,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .then(setUser)
             .catch(() => setUser(null))
             .finally(() => setIsLoading(false));
+    }, []);
+
+    // Listen for global 401 unauthorized events to wipe state
+    useEffect(() => {
+        const handleUnauthorized = () => {
+            setUser(null);
+        };
+        window.addEventListener(AUTH_EVENTS.UNAUTHORIZED, handleUnauthorized);
+        return () => window.removeEventListener(AUTH_EVENTS.UNAUTHORIZED, handleUnauthorized);
     }, []);
 
     const login = async (email: string, password: string) => {
