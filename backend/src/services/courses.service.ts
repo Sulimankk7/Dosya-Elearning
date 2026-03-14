@@ -22,7 +22,6 @@ function formatLessonDuration(minutes: number | null): string {
 }
 
 export const coursesService = {
-    /** GET /api/courses — matching CourseCatalog page shape */
     async listCourses() {
         const courses = await coursesRepository.findAll(true);
         return courses.map((c) => ({
@@ -37,15 +36,27 @@ export const coursesService = {
         }));
     },
 
-    /** GET /api/courses/:id — matching CourseDetails page shape */
     async getCourseDetail(courseId: string, userId?: string) {
         const course = await coursesRepository.findById(courseId);
         if (!course) throw new NotFoundError('Course not found');
 
-        const sections = await sectionsRepository.findByCourseId(courseId);
-        const totalLessons = await lessonsRepository.countByCourseId(courseId);
+        // FIX: The original awaited each query sequentially:
+        //   1. findById (done above)
+        //   2. await sectionsRepository.findByCourseId
+        //   3. await lessonsRepository.countByCourseId
+        //   4. await enrollmentsRepository.findByUserAndCourse  (conditional)
+        //   5. await lessonProgressRepository.countCompleted    (conditional)
+        //   6. await lessonsRepository.findByCourseId
+        //
+        // Queries 2, 3, and 6 are completely independent — they do not depend on
+        // each other's results. Awaiting them one at a time wastes round-trip time
+        // on every single request. Replaced with Promise.all for the independent set.
+        const [sections, totalLessons, allLessons] = await Promise.all([
+            sectionsRepository.findByCourseId(courseId),
+            lessonsRepository.countByCourseId(courseId),
+            lessonsRepository.findByCourseId(courseId),
+        ]);
 
-        // Check enrollment
         let enrolled = false;
         let progress = 0;
         if (userId) {
@@ -57,10 +68,6 @@ export const coursesService = {
             }
         }
 
-        // Fetch all lessons for the entire course in one query, instead of looping over sections
-        const allLessons = await lessonsRepository.findByCourseId(courseId);
-
-        // Build sections with lessons
         const sectionsWithLessons = sections.map((section) => {
             const sectionLessons = allLessons.filter(l => l.section_id === section.id);
             return {
@@ -87,11 +94,11 @@ export const coursesService = {
                 duration:       formatDuration(course.duration_hours),
                 students:       parseInt(String(course.student_count || course.students_count || 0), 10),
                 lessons_count:  totalLessons,
-                rating:         course.rating,        // ✅ real value from DB
-                rating_count:   course.rating_count,  // ✅ real value from DB
+                rating:         course.rating,
+                rating_count:   course.rating_count,
                 level:          course.level,
                 language:       'العربية',
-                what_you_learn: course.what_you_learn, // ✅ real array from DB
+                what_you_learn: course.what_you_learn,
             },
             sections: sectionsWithLessons,
             enrolled,
@@ -99,49 +106,44 @@ export const coursesService = {
         };
     },
 
-    /** GET /api/courses/:id/content — matching CourseLearningPage shape (enrolled users only) */
     async getCourseContent(courseId: string, userId: string) {
         const course = await coursesRepository.findById(courseId);
         if (!course) throw new NotFoundError('Course not found');
 
-        const sections = await sectionsRepository.findByCourseId(courseId);
-        const totalLessons = await lessonsRepository.countByCourseId(courseId);
-        const completedTotal = await lessonProgressRepository.countCompletedByUserAndCourse(userId, courseId);
+        // FIX: Same pattern — sections, totalLessons, completedTotal, allLessons,
+        // and allProgress are all independent of each other. Run them in parallel.
+        const [sections, totalLessons, completedTotal, allLessons, allProgress] = await Promise.all([
+            sectionsRepository.findByCourseId(courseId),
+            lessonsRepository.countByCourseId(courseId),
+            lessonProgressRepository.countCompletedByUserAndCourse(userId, courseId),
+            lessonsRepository.findByCourseId(courseId),
+            lessonProgressRepository.findByUserAndCourse(userId, courseId),
+        ]);
 
-        // Optimization: Fetch all lessons and progress in bulk
-        const allLessons = await lessonsRepository.findByCourseId(courseId);
-        const allProgress = await lessonProgressRepository.findByUserAndCourse(userId, courseId);
-        
-        // Create a fast lookup map for progress
         const progressMap = new Map(allProgress.map(p => [p.lesson_id, p]));
 
         const sectionsWithLessons = sections.map((section) => {
             const sectionLessons = allLessons.filter(l => l.section_id === section.id);
-            const sectionLessonCount = sectionLessons.length;
-            
             let sectionCompletedCount = 0;
 
             const lessonsWithProgress = sectionLessons.map((l) => {
                 const prog = progressMap.get(l.id);
                 const isCompleted = prog?.is_completed || false;
-                if (isCompleted) {
-                    sectionCompletedCount++;
-                }
-
+                if (isCompleted) sectionCompletedCount++;
                 return {
                     id:        l.id,
                     title:     l.title,
                     duration:  formatLessonDuration(l.duration_minutes),
                     completed: isCompleted,
-                    locked:    false, // implicitly unlocked since user is enrolled
+                    locked:    false,
                 };
             });
 
             return {
                 id:       section.id,
                 title:    section.title,
-                progress: sectionLessonCount > 0
-                    ? Math.round((sectionCompletedCount / sectionLessonCount) * 100)
+                progress: sectionLessons.length > 0
+                    ? Math.round((sectionCompletedCount / sectionLessons.length) * 100)
                     : 0,
                 lessons: lessonsWithProgress,
             };

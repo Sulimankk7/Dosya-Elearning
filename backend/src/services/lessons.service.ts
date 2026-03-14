@@ -8,8 +8,6 @@ function formatLessonDuration(minutes: number | null): string {
     return `${minutes} دقيقة`;
 }
 
-// Removed automatic SAS signing from lesson fetch; will be handled via dedicated endpoint
-
 export const lessonsService = {
     async getLessonDetail(lessonId: string, userId?: string) {
         const lesson = await lessonsRepository.getLessonDetailWithContext(lessonId, userId);
@@ -25,23 +23,23 @@ export const lessonsService = {
 
         if (locked) {
             return {
-                id: lesson.id,
-                title: lesson.title,
-                duration: formatLessonDuration(lesson.duration_minutes),
-                locked: true,
-                completed: false,
-                video_url: null,   // never expose URL for locked lessons
+                id:          lesson.id,
+                title:       lesson.title,
+                duration:    formatLessonDuration(lesson.duration_minutes),
+                locked:      true,
+                completed:   false,
+                video_url:   null,
                 description: null,
             };
         }
 
         return {
-            id: lesson.id,
-            title: lesson.title,
-            duration: formatLessonDuration(lesson.duration_minutes),
-            video_url: lesson.video_url,  // Will be requested via /api/video/:id instead of full SAS here
+            id:          lesson.id,
+            title:       lesson.title,
+            duration:    formatLessonDuration(lesson.duration_minutes),
+            video_url:   lesson.video_url,
             description: lesson.description ?? null,
-            locked: false,
+            locked:      false,
             completed,
         };
     },
@@ -50,10 +48,21 @@ export const lessonsService = {
         completed?: boolean;
         watched_seconds?: number;
     }) {
-        const lesson = await lessonsRepository.findById(lessonId);
+        // FIX: The original ran 3 sequential awaits:
+        //   1. lessonsRepository.findById(lessonId)
+        //   2. lessonsRepository.getCourseIdByLessonId(lessonId)
+        //   3. enrollmentsRepository.findByUserAndCourse(userId, courseId)  ← waited for #2
+        //
+        // Queries 1 and 2 are independent — run them in parallel.
+        // Query 3 depends on 2's result, so it still runs after, but we've saved one
+        // full round-trip on every progress update.
+        const [lesson, courseId] = await Promise.all([
+            lessonsRepository.findById(lessonId),
+            lessonsRepository.getCourseIdByLessonId(lessonId),
+        ]);
+
         if (!lesson) throw new NotFoundError('Lesson not found');
 
-        const courseId = await lessonsRepository.getCourseIdByLessonId(lessonId);
         if (courseId) {
             const enrollment = await enrollmentsRepository.findByUserAndCourse(userId, courseId);
             if (!enrollment) {
@@ -62,13 +71,13 @@ export const lessonsService = {
         }
 
         const progress = await lessonProgressRepository.upsert(userId, lessonId, {
-            is_completed: data.completed,
+            is_completed:   data.completed,
             watched_seconds: data.watched_seconds,
         });
 
         return {
-            lesson_id: progress.lesson_id,
-            completed: progress.is_completed,
+            lesson_id:    progress.lesson_id,
+            completed:    progress.is_completed,
             watched_time: progress.watched_seconds,
         };
     },
