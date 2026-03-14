@@ -63,8 +63,10 @@ app.use(session({
     saveUninitialized: false,
     cookie: {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        // Enforce Secure and SameSite=none for cross-domain cookies
+        // Fallback to lax only if strictly local (e.g., localhost testing without HTTPS)
+        secure: process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT === 'production',
+        sameSite: (process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT === 'production') ? 'none' : 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     },
 }));

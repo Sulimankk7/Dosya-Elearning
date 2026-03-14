@@ -10,3 +10,9 @@
   from = "/*"
   to = "/index.html"
   status = 200
+
+[[redirects]]
+  from = "/api/*"
+  to = "https://dosya-elearning-production.up.railway.app/api/:splat"
+  status = 200
+  force = true
