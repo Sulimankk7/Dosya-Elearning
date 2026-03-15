@@ -6,6 +6,7 @@ import { supabase } from '../utils/supabaseClient';
 import { sendPasswordResetEmail } from '../services/email.service';
 import { createResetToken, validateResetToken, deleteResetToken } from '../services/token.service';
 import { validatePassword } from "../utils/passwordValidator";
+import { generateToken } from '../utils/jwt';
 const BCRYPT_SALT_ROUNDS = 12;
 
 const FORGOT_PASSWORD_RESPONSE = {
@@ -32,18 +33,14 @@ export const authController = {
 
             const result = await authService.register(full_name, email, password);
 
-            // Set session data
-            req.session.userId = result.user.id;
-            req.session.user = {
-                id: result.user.id,
-                role: result.user.role,
+            // Generate JWT token
+            const token = generateToken({
+                userId: result.user.id,
+                roleId: result.user.role,
                 roleName: result.user.role,
-                full_name: result.user.full_name,
-                email: result.user.email,
-                avatar_url: result.user.avatar_url,
-            };
+            });
 
-            res.status(201).json(result);
+            res.status(201).json({ token, ...result });
 
         } catch (error) {
             next(error);
@@ -55,18 +52,14 @@ export const authController = {
             const { email, password } = req.body;
             const result = await authService.login(email, password);
 
-            // Set session data
-            req.session.userId = result.user.id;
-            req.session.user = {
-                id: result.user.id,
-                role: result.user.role,
+            // Generate JWT token
+            const token = generateToken({
+                userId: result.user.id,
+                roleId: result.user.role,
                 roleName: result.user.role,
-                full_name: result.user.full_name,
-                email: result.user.email,
-                avatar_url: result.user.avatar_url,
-            };
+            });
 
-            res.json(result);
+            res.json({ token, ...result });
         } catch (error) {
             next(error);
         }
@@ -74,37 +67,19 @@ export const authController = {
 
     async me(req: Request, res: Response, next: NextFunction) {
         try {
-            if (!req.session.userId) {
+            if (!req.user) {
                 return res.status(401).json({ message: 'Unauthorized' });
             }
 
-            if (req.session.user) {
-                // Return safe fields from session
-                return res.json({
-                    id: req.session.user.id,
-                    full_name: req.session.user.full_name,
-                    email: req.session.user.email,
-                    role: req.session.user.role,
-                    avatar_url: req.session.user.avatar_url || '',
-                });
-            }
-
-            // Fallback for older sessions without req.session.user
-            const result = await authService.getCurrentUser(req.session.userId);
+            const result = await authService.getCurrentUser(req.user.userId);
             res.json(result);
         } catch (error) {
             next(error);
         }
     },
 
-    async logout(req: Request, res: Response, _next: NextFunction) {
-        req.session.destroy((err) => {
-            if (err) {
-                console.error('Session destroy error:', err);
-            }
-            res.clearCookie('connect.sid');
-            res.json({ message: 'Logged out' });
-        });
+    async logout(_req: Request, res: Response, _next: NextFunction) {
+        res.json({ message: 'Logged out' });
     },
 
     // ── Password Reset ───────────────────────────────────────────────────────

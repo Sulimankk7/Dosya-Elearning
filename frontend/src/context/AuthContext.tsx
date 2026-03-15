@@ -17,11 +17,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<AuthUser | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    // On app load: check if session exists
+    // On app load: check if JWT token exists
     useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            setIsLoading(false);
+            return;
+        }
         authApi.me()
             .then(setUser)
-            .catch(() => setUser(null))
+            .catch(() => {
+                localStorage.removeItem('token');
+                setUser(null);
+            })
             .finally(() => setIsLoading(false));
     }, []);
 
@@ -36,18 +44,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const login = async (email: string, password: string) => {
         const data = await authApi.login(email, password);
+        localStorage.setItem('token', data.token);
         setUser(data.user);
         return data.user;
     };
 
     const register = async (full_name: string, email: string, password: string) => {
         const data = await authApi.register(full_name, email, password);
+        localStorage.setItem('token', data.token);
         setUser(data.user);
         return data.user;
     };
 
     const logout = async () => {
         await authApi.logout();
+        localStorage.removeItem('token');
         setUser(null);
     };
 

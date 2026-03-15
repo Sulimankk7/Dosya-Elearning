@@ -1,10 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import compression from 'compression';
-import session from 'express-session';
-import connectPgSimple from 'connect-pg-simple';
 import dotenv from 'dotenv';
-import pool from './config/database';
 import routes from './routes';
 import { AppError } from './utils/errors';
 
@@ -13,8 +10,7 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Trust Railway's reverse proxy (required for secure cookies behind a proxy)
-app.set('trust proxy', 1);
+
 
 // --- GLOBAL TIMING LOGGER ---
 app.use((req, res, next) => {
@@ -39,7 +35,6 @@ app.use(cors({
         "https://dosya-elearning.netlify.app",
         "http://localhost:5173"
     ],
-    credentials: true,
     maxAge: 86400, // Cache preflight requests for 24 hours
 }));
 
@@ -50,26 +45,7 @@ app.use(compression() as any);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Session middleware (PostgreSQL-backed via connect-pg-simple)
-const PgSession = connectPgSimple(session);
-app.use(session({
-    store: new PgSession({
-        pool,
-        tableName: 'session',
-        createTableIfMissing: true,
-    }),
-    secret: process.env.SESSION_SECRET || 'dosya-session-secret-key',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        httpOnly: true,
-        // Enforce Secure and SameSite=none for cross-domain cookies
-        // Fallback to lax only if strictly local (e.g., localhost testing without HTTPS)
-        secure: process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT === 'production',
-        sameSite: (process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT === 'production') ? 'none' : 'lax',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    },
-}));
+
 app.get("/", (req, res) => {
     res.send("DOSYA backend is running");
 });

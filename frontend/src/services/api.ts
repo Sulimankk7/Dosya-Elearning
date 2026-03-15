@@ -44,10 +44,15 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
         ...(options.headers as Record<string, string> || {})
     };
 
+    // Attach JWT token if available
+    const token = localStorage.getItem('token');
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const res = await fetch(`${API_BASE}${path}`, {
         ...options,
         headers,
-        credentials: 'include',  // sends session cookie automatically
     });
 
     if (!res.ok) {
